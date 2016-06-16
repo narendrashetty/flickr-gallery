@@ -1,13 +1,31 @@
 import React from 'react';
+import { connect } from 'react-redux';
+import { bindActionCreators } from 'redux';
+import actions from '../actions';
 
 export const App = React.createClass({
+  
+  componentWillMount() {
+    this.props.actions.fetchRecentPhotos();
+  },
+
   render() {
     return (
-      <div className="fullHeight">
+      <div>
         App
       </div>
     );
   }
 });
 
-export default App;
+function mapStateToProps() {
+  return {};
+}
+
+function mapDispatchToProps(dispatch) {
+  return {
+    'actions': bindActionCreators(actions, dispatch)
+  };
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(App);
