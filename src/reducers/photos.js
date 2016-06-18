@@ -3,7 +3,7 @@ import * as types from '../constants/ActionTypes';
 import { normalizePhotosArray } from '../utils/normalizer';
 
 const initialState = fromJS({
-  'isFetching': false,
+  'isFetching': true,
   'photos': []
 });
 

@@ -1,12 +1,14 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
+import { normalizeImages } from '../utils/normalizer';
 
 const PhotoGallery = React.createClass({
 
   getInitialState() {
     return {
-      'isLoading': true
+      'isLoading': true,
+      'rows': []
     };
   },
 
@@ -23,29 +25,50 @@ const PhotoGallery = React.createClass({
   },
 
   setup(props) {
+    const isFetching = props.Photos.get('isFetching');
     this.setState({
-      'isLoading': props.Photos.get('isFetching')
+      'isLoading': isFetching
     });
-  },
+    if (!isFetching) {
+      const photos = props.Photos.get('photos');
+      const processedImages = this.processImages(photos);
+      const rows = this.buildRows(processedImages);
 
-  renderLoading() {
-    return (
-      <div>Loading...</div>
-    );
+      for(let i = 0; i < rows.length; i++) {
+        rows[i] = this.fitImagesInRow(rows[i]);
+        rows[i] = normalizeImages(rows[i]);
+
+        const difference = (this.maxWidth - this.getCumulativeWidth(rows[i]));
+        const amountOfImages = rows[i].length;
+
+        if(amountOfImages > 1 && difference < 10) {
+          const addToEach = difference / amountOfImages;
+          for(let n = 0; n < rows[i].length; n++) {
+            rows[i][n].width += addToEach;
+          }
+
+          rows[i] = normalizeImages(rows[i]);
+
+          rows[i][rows[i].length - 1].width += (this.maxWidth - this.getCumulativeWidth(rows[i]));
+        }
+      }
+      this.setState({
+        rows
+      });
+    }
   },
 
   processImages(photos) {
     const processedImages = [];
-    for(var i = 0; i < photos.size; i++) {
-      var width = parseInt(photos.getIn([i, 'width']), 10);
-      var height = parseInt(photos.getIn([i, 'height']), 10);
+    for(let i = 0; i < photos.size; i++) {
+      let width = parseInt(photos.getIn([i, 'width']), 10);
+      const height = parseInt(photos.getIn([i, 'height']), 10);
       width = width * (this.targetHeight / height); 
-      if (isNaN(width)) debugger;
       var image = {
-        'width': width,
+        'id': photos.getIn([i, 'id']),
         'height': this.targetHeight,
-        'image': photos.getIn([i, 'url']),
-        'id': photos.getIn([i, 'id'])
+        'url': photos.getIn([i, 'url']),
+        width
       };
 
       processedImages.push(image);
@@ -54,14 +77,13 @@ const PhotoGallery = React.createClass({
   },
 
   buildRows(processedImages) {
-    var currentRow = 0;
-    var currentWidth = 0;
-    var imageCounter = 0;
-    var rows = [];
-    var maxWidth = this.maxWidth;
+    let currentRow = 0;
+    let currentWidth = 0;
+    let imageCounter = 0;
+    const rows = [];
 
     processedImages.forEach((image) => {
-      if (currentWidth >= maxWidth) {
+      if (currentWidth >= this.maxWidth) {
         currentRow++;
         currentWidth = 0;
       }
@@ -87,13 +109,13 @@ const PhotoGallery = React.createClass({
   },
 
   getCumulativeWidth(images) {
-    var width = 0;
+    let width = 0;
 
-    for(var i = 0; i < images.length; i++) {
+    for(let i = 0; i < images.length; i++) {
       width += images[i].width;
     }
 
-    width += (images.length-1)*this.borderOffset;
+    width += (images.length - 1) * this.borderOffset;
 
     return width;
   },
@@ -101,83 +123,47 @@ const PhotoGallery = React.createClass({
   makeSmaller(image, amount) {
     amount = amount || 1;
 
-    var newHeight = image.height - amount;
+    const newHeight = image.height - amount;
     image.width = (image.width * (newHeight / image.height));
     image.height = newHeight;
 
     return image;
   },
 
-  normalizeImage(image) {
-    image.width =  parseInt(image.width);
-    image.height = parseInt(image.height);
-
-    return image;
-  },
-
-  normalizeImages(images) {
-    for(var i = 0; i < images.length; i++) {
-      this.normalizeImage(images[i]);
-    }
-
-    return images;
-  },
-
-  renderGrid(rows) {
-    var output = '';
-    for(var i = 0; i < rows.length; i++) {
-      output += '<div class="image-row">';
-      for(var n = 0; n < rows[i].length; n++) {
-        var image = rows[i][n];
-        output += '<img src="' + image.image + '" style="width:' + Math.ceil(image.width) + 'px; height:' + image.height + 'px;" />';
-      }
-      output += '</div>';
-    }
+  renderLoading() {
     return (
-      <div style={{'width': '800px'}}>
-        {rows.map((row) => {
-          return (
-            <div className="image-row">
-              {row.map((image) => {
-                return (
-                  <img src={image.image} style={{
-                    'width': `${Math.ceil(image.width)}px`,
-                    'height': `${image.height}px`
-                  }} />
-                );
-              })}
-            </div>
-          );
-        })}
-      </div>
+      <div>Loading...</div>
     );
   },
 
+  renderImageRow(row, index) {
+    return (
+      <div className="image-row" key={index}>
+        {row.map((image) => {
+          return (
+            <img
+              key={image.id}
+              src={image.url}
+              style={{
+                'width': `${Math.ceil(image.width)}px`,
+                'height': `${image.height}px`
+              }} 
+            />
+          );
+        })}
+      </div>
+    )
+  },
+
   renderBody() {
-    const photos = this.props.Photos.get('photos');
-    const processedImages = this.processImages(photos);
-    const rows = this.buildRows(processedImages);
-    for(var i = 0; i < rows.length; i++) {
-      rows[i] = this.fitImagesInRow(rows[i]);
-
-      rows[i] = this.normalizeImages(rows[i]);
-
-      var difference = (this.maxWidth- this.getCumulativeWidth(rows[i]));
-      var amountOfImages = rows[i].length;
-
-      if(amountOfImages > 1 && difference < 10) {
-        var addToEach = difference / amountOfImages;
-        for(var n = 0; n < rows[i].length; n++) {
-          rows[i][n].width += addToEach;
-        }
-
-        rows[i] = this.normalizeImages(rows[i]);
-
-        rows[i][rows[i].length-1].width += (this.maxWidth - this.getCumulativeWidth(rows[i]));
-      }
-    }
-
-    return this.renderGrid(rows);
+    const rows = this.state.rows;
+    return (
+      <div style={{'width': '800px'}}>
+        {rows.map((row, index) => {
+          return this.renderImageRow(row, index);
+        })}
+      </div>
+    );
   },
 
   render() {
