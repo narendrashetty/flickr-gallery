@@ -28,6 +28,7 @@
     "react-dom": "^15.1.0",
     "react-redux": "^4.4.5",
     "react-router": "^2.4.1",
+    "react-virtualized": "^7.7.1",
     "redux": "^3.5.2"
   }
 }

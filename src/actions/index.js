@@ -50,9 +50,6 @@ const Actions = {
         .then((json) => {
           return dispatch(handler.success(json));
         })
-        .catch((error) => {
-          return dispatch(handler.error(error));
-        });
     };
   }
 };
