@@ -1,4 +1,5 @@
 const webpack = require("webpack");
+const autoprefixer = require('autoprefixer');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = {
@@ -10,9 +11,12 @@ module.exports = {
   ],
   'module': {
     'loaders': [{
-      'test': /\.js?$/,
+      'test': /\.js$/,
       'exclude': /node_modules/,
       'loader': 'react-hot!babel'
+    }, {
+      'test': /\.css$/,
+      'loader': 'style!css!postcss'
     }]
   },
   'resolve': {
@@ -33,5 +37,8 @@ module.exports = {
       'filename': 'index.html'
     }),
     new webpack.HotModuleReplacementPlugin()
-  ]
+  ],
+  postcss: function () {
+    return [autoprefixer];
+  }
 };

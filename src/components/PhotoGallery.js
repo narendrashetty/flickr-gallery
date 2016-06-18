@@ -2,6 +2,9 @@ import React from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import { normalizeImages } from '../utils/normalizer';
+import shallowCompare from 'react-addons-shallow-compare';
+import { VirtualScroll, WindowScroller } from 'react-virtualized';
+import 'react-virtualized/styles.css';
 
 const PhotoGallery = React.createClass({
 
@@ -14,7 +17,7 @@ const PhotoGallery = React.createClass({
 
   targetHeight: 250,
   borderOffset: 10,
-  maxWidth: 800,
+  maxWidth: 1000,
 
   componentWillMount() {
     this.setup(this.props);
@@ -22,6 +25,10 @@ const PhotoGallery = React.createClass({
 
   componentWillReceiveProps(nextProps) {
     this.setup(nextProps);
+  },
+
+  shouldComponentUpdate (nextProps, nextState) {
+    return shallowCompare(this, nextProps, nextState);
   },
 
   setup(props) {
@@ -63,14 +70,14 @@ const PhotoGallery = React.createClass({
     for(let i = 0; i < photos.size; i++) {
       let width = parseInt(photos.getIn([i, 'width']), 10);
       const height = parseInt(photos.getIn([i, 'height']), 10);
-      width = width * (this.targetHeight / height); 
+      const ratio = width / height;
+      width = this.targetHeight * ratio; 
       var image = {
         'id': photos.getIn([i, 'id']),
         'height': this.targetHeight,
         'url': photos.getIn([i, 'url']),
         width
       };
-
       processedImages.push(image);
     }
     return processedImages;
@@ -122,7 +129,6 @@ const PhotoGallery = React.createClass({
 
   makeSmaller(image, amount) {
     amount = amount || 1;
-
     const newHeight = image.height - amount;
     image.width = (image.width * (newHeight / image.height));
     image.height = newHeight;
@@ -136,9 +142,13 @@ const PhotoGallery = React.createClass({
     );
   },
 
-  renderImageRow(row, index) {
+  renderImageRow({index}) {
+    const row = this.state.rows[index];
+
     return (
-      <div className="image-row" key={index}>
+      <div className="image-row" style={{
+        'display': 'flex'
+      }}>
         {row.map((image) => {
           return (
             <img
@@ -147,21 +157,49 @@ const PhotoGallery = React.createClass({
               style={{
                 'width': `${Math.ceil(image.width)}px`,
                 'height': `${image.height}px`
-              }} 
+              }}
             />
           );
         })}
       </div>
-    )
+    );
+  },
+
+  preloadImages() {
+    const photos = this.props.Photos.get('photos');
+    const styles = {
+      'position':'absolute',
+      'overflow':'hidden',
+      'left': -9999,
+      'top': -9999,
+      'height': 1,
+      'width': 1
+    };
+    return (
+      <div style={styles}>
+        {photos.map((photo) => {
+          return <img src={photo.get('url')} key={photo.get('id')} />
+        })}
+      </div>
+    );
   },
 
   renderBody() {
     const rows = this.state.rows;
     return (
-      <div style={{'width': '800px'}}>
-        {rows.map((row, index) => {
-          return this.renderImageRow(row, index);
-        })}
+      <div>
+        <WindowScroller>
+          {({ height, scrollTop }) => (
+            <VirtualScroll
+              width={this.maxWidth}
+              height={height}
+              rowCount={rows.length}
+              rowHeight={this.targetHeight}
+              rowRenderer={this.renderImageRow}
+              scrollTop={scrollTop}
+            />
+          )}
+        </WindowScroller>
       </div>
     );
   },
