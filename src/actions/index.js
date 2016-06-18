@@ -26,7 +26,8 @@ const Handlers = {
 
     success(data) {
       return {
-        'type': types.FETCH_PHOTOS_SUCCESS
+        'type': types.FETCH_PHOTOS_SUCCESS,
+        data
       };
     },
 
@@ -53,7 +54,7 @@ const Actions = {
           return dispatch(handler.error(error));
         });
     };
-  },
+  }
 };
 
 export default Actions;

@@ -12,7 +12,7 @@ export const App = React.createClass({
   render() {
     return (
       <div>
-        App
+        Appsas
       </div>
     );
   }
