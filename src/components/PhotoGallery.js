@@ -5,6 +5,7 @@ import { normalizeImages } from '../utils/normalizer';
 import shallowCompare from 'react-addons-shallow-compare';
 import { VirtualScroll, WindowScroller } from 'react-virtualized';
 import 'react-virtualized/styles.css';
+import Photo from './Photo';
 
 const PhotoGallery = React.createClass({
 
@@ -76,6 +77,8 @@ const PhotoGallery = React.createClass({
         'id': photos.getIn([i, 'id']),
         'height': this.targetHeight,
         'url': photos.getIn([i, 'url']),
+        'postedBy': photos.getIn([i, 'postedBy']),
+        'title': photos.getIn([i, 'title']),
         width
       };
       processedImages.push(image);
@@ -151,13 +154,9 @@ const PhotoGallery = React.createClass({
       }}>
         {row.map((image) => {
           return (
-            <img
+            <Photo 
               key={image.id}
-              src={image.url}
-              style={{
-                'width': `${Math.ceil(image.width)}px`,
-                'height': `${image.height}px`
-              }}
+              image={image}
             />
           );
         })}

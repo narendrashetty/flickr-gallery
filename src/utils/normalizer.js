@@ -4,8 +4,9 @@ function normalizePhotosSingle(photo) {
     'url': photo.url_z,
     'postedBy': photo.realname || photo.ownername,
     'width': photo.width_z,
-    'height': photo.height_z
-  }
+    'height': photo.height_z,
+    'title': photo.title
+  };
 }
 
 export function normalizePhotosArray(photos) {
