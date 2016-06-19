@@ -85,7 +85,15 @@ const PhotoGallery = React.createClass({
 
   renderLoading() {
     return (
-      <div>Loading...</div>
+      <div style={{
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        position: 'absolute'
+      }}>
+      Loading...</div>
     );
   },
 
