@@ -11,12 +11,12 @@ function normalizePhotosSingle(photo) {
 
 export function normalizePhotosArray(photos) {
   var photosObject = {};
-  photos.filter((photo) => {
+  return photos.filter((photo) => {
     return photo.url_z !== undefined
       && photo.width_z !== undefined
       && photo.height_z !== undefined;
-  }).forEach((photo) => {
-    photosObject[photo.id] = normalizePhotosSingle(photo);
+  }).map((photo) => {
+    return normalizePhotosSingle(photo);
   });
   return photosObject;
 }

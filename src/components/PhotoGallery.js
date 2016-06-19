@@ -48,7 +48,7 @@ const PhotoGallery = React.createClass({
       if (tag) {
         const tags = props.Tags.getIn(['tags', tag, 'value']);
         if (tags) {
-          photos = tags.map(tag => photos.get(tag));
+          photos = tags.map(tag => photos.find(photo => photo.get('id') === tag));
         }
       }
       const processedImages = processImages(photos);

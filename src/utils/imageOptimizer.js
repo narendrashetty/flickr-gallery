@@ -33,22 +33,22 @@ export function fitImagesInRow(images) {
 
 export function processImages(photos) {
   const processedImages = [];
-  photos.forEach((photo, key) => {
-    let width = parseInt(photo.get('width'), 10);
-    const height = parseInt(photo.get('height'), 10);
+  for(let i=0; i< photos.size; i++) {
+    let width = parseInt(photos.getIn([i, 'width']), 10);
+    const height = parseInt(photos.getIn([i, 'height']), 10);
     const ratio = width / height;
     width = TARGET_HEIGHT * ratio; 
 
     var image = {
-      'id': photo.get('id'),
+      'id': photos.getIn([i, 'id']),
       'height': TARGET_HEIGHT,
-      'url': photo.get('url'),
-      'postedBy': photo.get('postedBy'),
-      'title': photo.get('title'),
+      'url': photos.getIn([i, 'url']),
+      'postedBy': photos.getIn([i, 'postedBy']),
+      'title': photos.getIn([i, 'title']),
       width
     };
     processedImages.push(image);
-  });
+  }
 
   return processedImages;
 }

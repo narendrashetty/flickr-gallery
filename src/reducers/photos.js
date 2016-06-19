@@ -5,7 +5,7 @@ import { normalizePhotosArray } from '../utils/normalizer';
 const initialState = fromJS({
   'isFetching': true,
   'isNextPageFetching': false,
-  'photos': {},
+  'photos': [],
   'page': 0,
   'pages': 1
 });
@@ -42,9 +42,7 @@ export default function(state = initialState, action) {
       });
 
       return state.updateIn(['photos'], (photos) => {
-        return photos.mergeDeepWith((prev, next) => {
-          return prev / next;
-        }, fromJS(normalizePhotosArray(action.data.photos.photo)));
+        return photos.concat(fromJS(normalizePhotosArray(action.data.photos.photo)));
       });
 
     default:
