@@ -11,7 +11,7 @@ const sassLoaders = [
 ];
 
 module.exports = {
-  'devtool': 'inline-source-map',
+  'devtool': 'source-map',
   'entry': [
     './src/index.js'
   ],
@@ -45,8 +45,14 @@ module.exports = {
       'template': './index.html',
       'filename': 'index.html'
     }),
+    new webpack.optimize.OccurenceOrderPlugin(),
     new webpack.HotModuleReplacementPlugin(),
     new ExtractTextPlugin('[name].css'),
+    new webpack.optimize.UglifyJsPlugin({
+      'compressor': {
+        'warnings': false,
+      }
+    }),
     new webpack.DefinePlugin({
       'process.env.NODE_ENV': JSON.stringify('production')
     })
