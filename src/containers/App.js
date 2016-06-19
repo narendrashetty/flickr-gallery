@@ -13,7 +13,7 @@ export const App = React.createClass({
   render() {
     return (
       <div>
-        <TopBar />
+        <TopBar location={this.props.location} />
         {this.props.children}
       </div>
     );

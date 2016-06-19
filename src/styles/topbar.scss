@@ -10,11 +10,37 @@
   	margin: 0 auto;
   	display: flex;
   	align-items: center;
+    justify-content: space-between;
   	height: 100%;
   }
   &__title {
   	color: #fff;
   	font-size: 18px;
   	font-weight: bold;
+  }
+  &__filter {
+    color: #969696;
+    width: 230px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    span {
+      border-bottom: 1px solid #969696;
+      padding-bottom: 3px;
+      cursor: pointer;
+    }
+  }
+
+  .filterHolder {
+    display: flex;
+  }
+
+  .clearFilter {
+    color: #969696;
+    font-size: 12px;
+    margin-right: 10px;
+    border-bottom: 1px solid #969696;
+    cursor: pointer;
+    text-decoration: none;
   }
 }
