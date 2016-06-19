@@ -17,7 +17,7 @@ const PhotoGallery = React.createClass({
   },
 
   targetHeight: 250,
-  borderOffset: 10,
+  borderOffset: 5,
   maxWidth: 1000,
 
   componentWillMount() {
@@ -186,12 +186,12 @@ const PhotoGallery = React.createClass({
   renderBody() {
     const rows = this.state.rows;
     return (
-      <div>
+      <div style={{'paddingTop': '40px', 'boxSizing': 'border-box'}}>
         <WindowScroller>
           {({ height, scrollTop }) => (
             <VirtualScroll
               width={this.maxWidth}
-              height={height}
+              height={height - 40}
               rowCount={rows.length}
               rowHeight={this.targetHeight}
               rowRenderer={this.renderImageRow}
