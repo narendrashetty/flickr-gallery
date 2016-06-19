@@ -1,27 +1,27 @@
 import { fromJS } from 'immutable';
 import * as types from '../constants/ActionTypes';
-import { normalizePhotosArray } from '../utils/normalizer';
+import { normalizeTags } from '../utils/normalizer';
 
-const initialState = fromJS({});
+const initialState = fromJS({
+  tags: {},
+  titleTags: {}
+});
 
 export default function(state = initialState, action) {
   switch (action.type) {
 
     case types.FETCH_PHOTOS_SUCCESS:
+      let stateTags = state.get('tags');
+      let stateTitleTags = state.get('titleTags');
       action.data.photos.photo.forEach((photo) => {
-        const tags = photo.tags.split(' ').filter(Boolean);
-        tags.forEach((tag) => {
-          if (!state.get(tag)) {
-            state = state.merge({
-              [tag]: []
-            });
-          }
-
-          let newList = state.get(tag).push(photo.id);
-          state = state.mergeIn([tag], newList);
-        });
+        stateTags = normalizeTags(photo.tags, stateTags, photo.id);
+        stateTitleTags = normalizeTags(photo.title, stateTitleTags, photo.id);
       });
-      return state;
+      
+      return state.merge({
+        'tags': stateTags,
+        'titleTags': stateTitleTags
+      });
 
     default:
       return state;

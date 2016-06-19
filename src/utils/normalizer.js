@@ -10,13 +10,15 @@ function normalizePhotosSingle(photo) {
 }
 
 export function normalizePhotosArray(photos) {
-  return photos.filter((photo) => {
+  var photosObject = {};
+  photos.filter((photo) => {
     return photo.url_z !== undefined
       && photo.width_z !== undefined
       && photo.height_z !== undefined;
-  }).map((photo) => {
-    return normalizePhotosSingle(photo);
+  }).forEach((photo) => {
+    photosObject[photo.id] = normalizePhotosSingle(photo);
   });
+  return photosObject;
 }
 
 function normalizeImage(image) {
@@ -32,4 +34,19 @@ export function normalizeImages(images) {
   }
 
   return images;
+}
+
+export function normalizeTags(tagString, state, photoId) {
+  const tags = tagString.split(' ').filter(Boolean);
+  tags.forEach((tag) => {
+    if (!state.get(tag)) {
+      state = state.merge({
+        [tag]: []
+      });
+    }
+
+    const newList = state.get(tag).push(photoId);
+    state = state.mergeIn([tag], newList);
+  });
+  return state;
 }

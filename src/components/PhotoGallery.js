@@ -2,6 +2,8 @@ import React from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import { normalizeImages } from '../utils/normalizer';
+import { fitImagesInRow, getCumulativeWidth, processImages, buildRows } from '../utils/imageOptimizer';
+import { TARGET_HEIGHT, MAX_WIDTH } from '../constants/image';
 import shallowCompare from 'react-addons-shallow-compare';
 import { VirtualScroll, WindowScroller } from 'react-virtualized';
 import 'react-virtualized/styles.css';
@@ -12,13 +14,10 @@ const PhotoGallery = React.createClass({
   getInitialState() {
     return {
       'isLoading': true,
-      'rows': []
+      'rows': [],
+      'tag': 'all'
     };
   },
-
-  targetHeight: 250,
-  borderOffset: 5,
-  maxWidth: 1000,
 
   componentWillMount() {
     this.setup(this.props);
@@ -28,7 +27,7 @@ const PhotoGallery = React.createClass({
     this.setup(nextProps);
   },
 
-  shouldComponentUpdate (nextProps, nextState) {
+  shouldComponentUpdate(nextProps, nextState) {
     return shallowCompare(this, nextProps, nextState);
   },
 
@@ -38,15 +37,22 @@ const PhotoGallery = React.createClass({
       'isLoading': isFetching
     });
     if (!isFetching) {
-      const photos = props.Photos.get('photos');
-      const processedImages = this.processImages(photos);
-      const rows = this.buildRows(processedImages);
+      let photos = props.Photos.get('photos');
 
+      const tag = props.location.query.tag;
+      if (tag) {
+        const tags = props.Tags.getIn(['tags', tag]);
+        if (tags) {
+          photos = tags.map(tag => photos.get(tag));
+        }
+      }
+      const processedImages = processImages(photos);
+      const rows = buildRows(processedImages);
       for(let i = 0; i < rows.length; i++) {
-        rows[i] = this.fitImagesInRow(rows[i]);
+        rows[i] = fitImagesInRow(rows[i]);
         rows[i] = normalizeImages(rows[i]);
 
-        const difference = (this.maxWidth - this.getCumulativeWidth(rows[i]));
+        const difference = (MAX_WIDTH - getCumulativeWidth(rows[i]));
         const amountOfImages = rows[i].length;
 
         if(amountOfImages > 1 && difference < 10) {
@@ -57,86 +63,14 @@ const PhotoGallery = React.createClass({
 
           rows[i] = normalizeImages(rows[i]);
 
-          rows[i][rows[i].length - 1].width += (this.maxWidth - this.getCumulativeWidth(rows[i]));
+          rows[i][rows[i].length - 1].width += (MAX_WIDTH - getCumulativeWidth(rows[i]));
         }
       }
       this.setState({
-        rows
+        rows,
+        tag: tag || 'all'
       });
     }
-  },
-
-  processImages(photos) {
-    const processedImages = [];
-    for(let i = 0; i < photos.size; i++) {
-      let width = parseInt(photos.getIn([i, 'width']), 10);
-      const height = parseInt(photos.getIn([i, 'height']), 10);
-      const ratio = width / height;
-      width = this.targetHeight * ratio; 
-      var image = {
-        'id': photos.getIn([i, 'id']),
-        'height': this.targetHeight,
-        'url': photos.getIn([i, 'url']),
-        'postedBy': photos.getIn([i, 'postedBy']),
-        'title': photos.getIn([i, 'title']),
-        width
-      };
-      processedImages.push(image);
-    }
-    return processedImages;
-  },
-
-  buildRows(processedImages) {
-    let currentRow = 0;
-    let currentWidth = 0;
-    let imageCounter = 0;
-    const rows = [];
-
-    processedImages.forEach((image) => {
-      if (currentWidth >= this.maxWidth) {
-        currentRow++;
-        currentWidth = 0;
-      }
-
-      if (!rows[currentRow]) {
-        rows[currentRow] = [];
-      }
-
-      rows[currentRow].push(image);
-      currentWidth += image.width;
-    });
-    return rows;
-  },
-
-  fitImagesInRow(images) {
-    while(this.getCumulativeWidth(images) > this.maxWidth) {
-      for(var i = 0; i < images.length; i++) {
-        images[i] = this.makeSmaller(images[i]);
-      }
-    };
-
-    return images;
-  },
-
-  getCumulativeWidth(images) {
-    let width = 0;
-
-    for(let i = 0; i < images.length; i++) {
-      width += images[i].width;
-    }
-
-    width += (images.length - 1) * this.borderOffset;
-
-    return width;
-  },
-
-  makeSmaller(image, amount) {
-    amount = amount || 1;
-    const newHeight = image.height - amount;
-    image.width = (image.width * (newHeight / image.height));
-    image.height = newHeight;
-
-    return image;
   },
 
   renderLoading() {
@@ -147,7 +81,6 @@ const PhotoGallery = React.createClass({
 
   renderImageRow({index}) {
     const row = this.state.rows[index];
-
     return (
       <div className="image-row" style={{
         'display': 'flex'
@@ -164,25 +97,6 @@ const PhotoGallery = React.createClass({
     );
   },
 
-  preloadImages() {
-    const photos = this.props.Photos.get('photos');
-    const styles = {
-      'position':'absolute',
-      'overflow':'hidden',
-      'left': -9999,
-      'top': -9999,
-      'height': 1,
-      'width': 1
-    };
-    return (
-      <div style={styles}>
-        {photos.map((photo) => {
-          return <img src={photo.get('url')} key={photo.get('id')} />
-        })}
-      </div>
-    );
-  },
-
   renderBody() {
     const rows = this.state.rows;
     return (
@@ -190,10 +104,11 @@ const PhotoGallery = React.createClass({
         <WindowScroller>
           {({ height, scrollTop }) => (
             <VirtualScroll
-              width={this.maxWidth}
+              key={this.state.tag}
+              width={MAX_WIDTH}
               height={height - 40}
               rowCount={rows.length}
-              rowHeight={this.targetHeight}
+              rowHeight={TARGET_HEIGHT}
               rowRenderer={this.renderImageRow}
               scrollTop={scrollTop}
             />
@@ -214,7 +129,8 @@ const PhotoGallery = React.createClass({
 
 function mapStateToProps(state) {
   return {
-    'Photos': state.Photos
+    'Photos': state.Photos,
+    'Tags': state.Tags
   };
 }
 
