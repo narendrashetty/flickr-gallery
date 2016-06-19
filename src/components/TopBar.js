@@ -1,6 +1,6 @@
 import React from 'react';
 
-const Photo = React.createClass({
+const TopBar = React.createClass({
 
   render() {
     return (
@@ -12,4 +12,4 @@ const Photo = React.createClass({
 
 });
 
-export default Photo;
+export default TopBar;

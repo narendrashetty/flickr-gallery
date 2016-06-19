@@ -35,6 +35,19 @@ const Handlers = {
       return {
         'type': types.FETCH_PHOTOS_ERROR
       };
+    },
+
+    nextPageInit() {
+      return {
+        'type': types.FETCH_PHOTOS_NEXT_INIT
+      };
+    },
+
+    nextPageSuccess(data) {
+      return {
+        'type': types.FETCH_PHOTOS_NEXT_SUCCESS,
+        data
+      };
     }
   }
 };
@@ -44,11 +57,24 @@ const Actions = {
     const handler = Handlers.fetchRecentPhotos;
     return (dispatch) => {
       dispatch(handler.init());
-      return Api.getRecentPhotos()
+      return Api.getRecentPhotos(1)
         .then(checkStatus)
         .then(parseJSON)
         .then((json) => {
           return dispatch(handler.success(json));
+        })
+    };
+  },
+
+  fetchNextPhotos(page = 1) {
+    const handler = Handlers.fetchRecentPhotos;
+    return (dispatch) => {
+      dispatch(handler.nextPageInit());
+      return Api.getRecentPhotos(page)
+        .then(checkStatus)
+        .then(parseJSON)
+        .then((json) => {
+          return dispatch(handler.nextPageSuccess(json));
         })
     };
   }

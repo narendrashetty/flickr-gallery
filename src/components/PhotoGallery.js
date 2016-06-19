@@ -1,6 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
+import actions from '../actions';
 import { normalizeImages } from '../utils/normalizer';
 import { fitImagesInRow, getCumulativeWidth, processImages, buildRows } from '../utils/imageOptimizer';
 import { TARGET_HEIGHT, MAX_WIDTH } from '../constants/image';
@@ -8,6 +9,7 @@ import shallowCompare from 'react-addons-shallow-compare';
 import { VirtualScroll, WindowScroller } from 'react-virtualized';
 import 'react-virtualized/styles.css';
 import Photo from './Photo';
+import InfiniteScroll from './InfiniteScroll';
 
 const PhotoGallery = React.createClass({
 
@@ -15,7 +17,9 @@ const PhotoGallery = React.createClass({
     return {
       'isLoading': true,
       'rows': [],
-      'tag': 'all'
+      'tag': 'all',
+      'isNextPageLoading': false,
+      'hasMore': false
     };
   },
 
@@ -34,7 +38,8 @@ const PhotoGallery = React.createClass({
   setup(props) {
     const isFetching = props.Photos.get('isFetching');
     this.setState({
-      'isLoading': isFetching
+      'isLoading': isFetching,
+      'isNextPageLoading': props.Photos.get('isNextPageFetching')
     });
     if (!isFetching) {
       let photos = props.Photos.get('photos');
@@ -68,9 +73,14 @@ const PhotoGallery = React.createClass({
       }
       this.setState({
         rows,
-        tag: tag || 'all'
+        'tag': tag || 'all',
+        'hasMore': props.Photos.get('page') < props.Photos.get('pages')
       });
     }
+  },
+
+  fetchNewPhotos() {
+    this.props.actions.fetchNextPhotos(this.props.Photos.get('page') + 1);
   },
 
   renderLoading() {
@@ -99,6 +109,32 @@ const PhotoGallery = React.createClass({
 
   renderBody() {
     const rows = this.state.rows;
+
+    return (
+      <InfiniteScroll
+        fetchNewData={this.fetchNewPhotos}
+        isNewDataLoading={this.state.isNextPageLoading}
+        hasMore={this.state.hasMore}
+      >
+        <div style={{'paddingTop': '50px', 'boxSizing': 'border-box'}}>
+          <WindowScroller>
+            {({ height, scrollTop }) => (
+              <VirtualScroll
+                key={this.state.tag}
+                width={MAX_WIDTH}
+                height={height - 50}
+                rowCount={rows.length}
+                rowHeight={TARGET_HEIGHT}
+                rowRenderer={this.renderImageRow}
+                scrollTop={scrollTop}
+              />
+            )}
+          </WindowScroller>
+        </div>
+        
+      </InfiniteScroll>
+    );
+
     return (
       <div style={{'paddingTop': '50px', 'boxSizing': 'border-box'}}>
         <WindowScroller>
@@ -134,4 +170,10 @@ function mapStateToProps(state) {
   };
 }
 
-export default connect(mapStateToProps)(PhotoGallery);
+function mapDispatchToProps(dispatch) {
+  return {
+    'actions': bindActionCreators(actions, dispatch)
+  };
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(PhotoGallery);
