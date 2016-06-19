@@ -17,7 +17,6 @@ export default function(state = initialState, action) {
         stateTags = normalizeTags(photo.tags, stateTags, photo.id);
         stateTitleTags = normalizeTags(photo.title, stateTitleTags, photo.id);
       });
-      
       return state.merge({
         'tags': stateTags,
         'titleTags': stateTitleTags

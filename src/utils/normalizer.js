@@ -41,12 +41,15 @@ export function normalizeTags(tagString, state, photoId) {
   tags.forEach((tag) => {
     if (!state.get(tag)) {
       state = state.merge({
-        [tag]: []
+        [tag]: {
+          'key': tag,
+          'value': []
+        }
       });
     }
 
-    const newList = state.get(tag).push(photoId);
-    state = state.mergeIn([tag], newList);
+    const newList = state.getIn([tag, 'value']).push(photoId);
+    state = state.mergeIn([tag, 'value'], newList);
   });
   return state;
 }

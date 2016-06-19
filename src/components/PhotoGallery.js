@@ -41,7 +41,7 @@ const PhotoGallery = React.createClass({
 
       const tag = props.location.query.tag;
       if (tag) {
-        const tags = props.Tags.getIn(['tags', tag]);
+        const tags = props.Tags.getIn(['tags', tag, 'value']);
         if (tags) {
           photos = tags.map(tag => photos.get(tag));
         }
@@ -100,13 +100,13 @@ const PhotoGallery = React.createClass({
   renderBody() {
     const rows = this.state.rows;
     return (
-      <div style={{'paddingTop': '40px', 'boxSizing': 'border-box'}}>
+      <div style={{'paddingTop': '50px', 'boxSizing': 'border-box'}}>
         <WindowScroller>
           {({ height, scrollTop }) => (
             <VirtualScroll
               key={this.state.tag}
               width={MAX_WIDTH}
-              height={height - 40}
+              height={height - 50}
               rowCount={rows.length}
               rowHeight={TARGET_HEIGHT}
               rowRenderer={this.renderImageRow}

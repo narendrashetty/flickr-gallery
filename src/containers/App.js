@@ -2,6 +2,7 @@ import React from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import actions from '../actions';
+import TopBar from '../components/TopBar';
 
 export const App = React.createClass({
   
@@ -12,6 +13,7 @@ export const App = React.createClass({
   render() {
     return (
       <div>
+        <TopBar />
         {this.props.children}
       </div>
     );
